@@ -1,5 +1,6 @@
 HELP.md
 target/
+echo "application.log" >> .gitignore
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
