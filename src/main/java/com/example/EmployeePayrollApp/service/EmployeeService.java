@@ -1,5 +1,6 @@
 package com.example.EmployeePayrollApp.service;
 
+import com.example.EmployeePayrollApp.exceptions.EmployeeNotFoundException;
 import com.example.EmployeePayrollApp.model.Employee;
 import com.example.EmployeePayrollApp.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,8 @@ public class EmployeeService {
 
     // Fetch employee by ID
     public Optional<Employee> getEmployeeById(Long id) {
-        return employeeRepository.findById(id);
+        return Optional.ofNullable(employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found with ID: " + id)));
     }
 
     // Add a new employee
@@ -32,18 +34,26 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
-    // Update an employee
-    public Optional<Employee> updateEmployee(Long id, Employee updatedEmployee) {
-        return employeeRepository.findById(id).map(employee -> {
-            employee.setName(updatedEmployee.getName());
-            employee.setDepartment(updatedEmployee.getDepartment());
-            employee.setSalary(updatedEmployee.getSalary());
-            return employeeRepository.save(employee);
-        });
+    public Employee updateEmployee(Long id, Employee updatedEmployee) {
+        try {
+            return employeeRepository.findById(id).map(employee -> {
+                employee.setName(updatedEmployee.getName());
+                employee.setDepartment(updatedEmployee.getDepartment());
+                employee.setSalary(updatedEmployee.getSalary());
+                return employeeRepository.save(employee);
+            }).orElseThrow(() -> new EmployeeNotFoundException("Employee not found with ID: " + id));
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating employee: " + e.getMessage());
+        }
     }
+
+
 
     // Delete an employee
     public void deleteEmployee(Long id) {
+        if (!employeeRepository.existsById(id)) {
+            throw new RuntimeException("Employee not found with ID: " + id);
+        }
         employeeRepository.deleteById(id);
     }
 }
